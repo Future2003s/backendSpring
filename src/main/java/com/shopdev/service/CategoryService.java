@@ -1,7 +1,8 @@
 package com.shopdev.service;
 
+import com.shopdev.dto.request.CategoryRequest;
 import com.shopdev.model.CategoryEntity;
 
 public interface CategoryService {
-    public CategoryEntity createCategory(CategoryEntity category);
+    CategoryEntity createCategory(CategoryRequest request);
 }

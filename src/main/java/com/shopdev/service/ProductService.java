@@ -1,8 +1,8 @@
 package com.shopdev.service;
 
-import com.shopdev.dto.request.ProductCreateRequest;
+import com.shopdev.dto.request.ProductRequest;
 import com.shopdev.model.ProductEntity;
 
 public interface ProductService {
-    ProductEntity createProduct(ProductCreateRequest productCreateRequest);
+    ProductEntity createProduct(ProductRequest request);
 }

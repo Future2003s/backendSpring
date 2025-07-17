@@ -2,7 +2,6 @@ package com.shopdev.controller;
 
 
 import com.shopdev.dto.request.UserRequest;
-import com.shopdev.dto.response.DataMultipart;
 import com.shopdev.dto.response.ResponseData;
 import com.shopdev.exception.ErrorHandler;
 import com.shopdev.model.UserEntity;
@@ -14,7 +13,6 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -30,13 +28,11 @@ public class UserController {
     }
 
     @GetMapping("/findAllUser")
-    public ResponseData<DataMultipart<List<UserEntity>>> findAllUsers() {
-        DataMultipart<List<UserEntity>> dataMultipartList = new DataMultipart<>();
+    public ResponseData<List<UserEntity>> findAllUsers() {
         List<UserEntity> result = userService.findAllUsers();
         if (result == null) {
             throw new ErrorHandler("Error result");
         }
-        dataMultipartList.setResult(Collections.singletonList(result));
-        return new ResponseData<>(HttpStatus.OK, "Get All User SuccessFully", dataMultipartList);
+        return new ResponseData<>(HttpStatus.OK, "Get All User SuccessFully", result);
     }
 }

@@ -5,8 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
 @Entity
 @Table(name = "tbl_categories")
@@ -16,13 +15,14 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class CategoryEntity extends AbstractEntity {
-    @Column(name = "name_category", length = 50)
-    String name;
+public class CategoryEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
 
-    @Lob
-    String description;
+    @Column(name = "category_name", nullable = false, length = 100)
+    String categoryName;
 
-    @OneToMany(mappedBy = "category", cascade = CascadeType.PERSIST)
-    Set<ProductEntity> products = new HashSet<>();
+    @OneToMany(mappedBy = "category")
+    List<ProductEntity> products;
 }

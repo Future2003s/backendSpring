@@ -7,20 +7,11 @@ import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
 
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ProductCreateRequest implements Serializable {
-    String productName;
-
-    BigDecimal price;
-
-    String description;
-
-    Long stockKeepingUnit;
-    String imageUrl;
-
-    Long categoryId;
+public class ProductRequest implements Serializable {
+    String product_name;
+    String product_price;
 }
