@@ -1,6 +1,7 @@
 package com.shopdev.service.impl;
 
 import com.shopdev.dto.request.ProductRequest;
+import com.shopdev.dto.response.ProductResponse;
 import com.shopdev.model.CategoryEntity;
 import com.shopdev.model.ProductEntity;
 import com.shopdev.repository.CategoryRepository;
@@ -21,11 +22,23 @@ public class ProductServiceImpl implements ProductService {
     ProductRepository productRepository;
 
     @Override
-    public ProductEntity createProduct(ProductRequest request) {
-        CategoryEntity category = CategoryEntity.builder().build();
-        return productRepository.save(ProductEntity.builder()
-                .product_name(request.getProduct_name())
-                .category(category)
-                .build());
+    public ProductResponse createProduct(ProductRequest request) {
+        CategoryEntity categoryEntity = categoryRepository.findById(request.getCategory_id()).orElseThrow(() -> new RuntimeException("Category Not Found"));
+
+        ProductEntity product = productRepository.save(
+                ProductEntity.builder()
+                        .product_name(request.getProduct_name())
+                        .price(request.getProduct_price())
+                        .category(categoryEntity)
+                        .build()
+        );
+
+        return ProductResponse.builder()
+                .product_name(product.getProduct_name())
+                .product_price(product.getPrice())
+                .category_id(categoryEntity.getId())
+                .category_id(categoryEntity.getId())
+                .build();
+
     }
 }

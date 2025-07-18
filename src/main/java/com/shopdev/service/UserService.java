@@ -1,12 +1,11 @@
 package com.shopdev.service;
 
 import com.shopdev.dto.request.UserRequest;
+import com.shopdev.dto.response.UserResponse;
 import com.shopdev.model.UserEntity;
-
-import java.util.List;
 
 public interface UserService {
     UserEntity createUser(UserRequest userRequest);
 
-    List<UserEntity> findAllUsers();
+    UserResponse login(UserRequest userRequest);
 }

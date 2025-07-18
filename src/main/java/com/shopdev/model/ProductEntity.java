@@ -26,7 +26,7 @@ public class ProductEntity extends AbstractEntity {
     @Column(name = "product_price")
     BigDecimal price;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     CategoryEntity category;
 }

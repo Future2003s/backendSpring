@@ -1,6 +1,5 @@
 package com.shopdev.exception;
 
-
 import jakarta.validation.UnexpectedTypeException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -48,6 +47,15 @@ public class GlobalExceptionHandler implements Serializable {
         ErrorResponse errorResponse = new ErrorResponse();
         String message = ex.getMessage();
         errorResponse.setMessage(message);
+        errorResponse.setStatus(500);
+        errorResponse.setTimestamp(new Date(System.currentTimeMillis()));
+        return errorResponse;
+    }
+
+    @ExceptionHandler(value = RuntimeException.class)
+    public ErrorResponse handleRuntimeException(RuntimeException ex, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse();
+        errorResponse.setMessage(ex.getMessage());
         errorResponse.setStatus(500);
         errorResponse.setTimestamp(new Date(System.currentTimeMillis()));
         return errorResponse;

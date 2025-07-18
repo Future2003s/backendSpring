@@ -23,6 +23,6 @@ public class CategoryEntity {
     @Column(name = "category_name", nullable = false, length = 100)
     String categoryName;
 
-    @OneToMany(mappedBy = "category")
+    @OneToMany(mappedBy = "category", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     List<ProductEntity> products;
 }

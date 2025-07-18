@@ -2,8 +2,8 @@ package com.shopdev.controller;
 
 
 import com.shopdev.dto.request.ProductRequest;
+import com.shopdev.dto.response.ProductResponse;
 import com.shopdev.dto.response.ResponseData;
-import com.shopdev.model.ProductEntity;
 import com.shopdev.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -23,7 +23,7 @@ public class ProductController {
     ProductService productService;
 
     @PostMapping("/createProduct")
-    public ResponseData<ProductEntity> createProduct(@Valid @RequestBody ProductRequest request) {
+    public ResponseData<ProductResponse> createProduct(@Valid @RequestBody ProductRequest request) {
         return new ResponseData<>(HttpStatus.CREATED, "Create Produduct SuccessFully", productService.createProduct(request));
     }
 }

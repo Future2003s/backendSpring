@@ -1,12 +1,10 @@
 package com.shopdev.model;
 
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.shopdev.enums.ROLE;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 
@@ -15,15 +13,10 @@ import lombok.experimental.FieldDefaults;
 @Setter
 @Table(name = "usr_account")
 @NoArgsConstructor
+@Builder
+@AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserEntity extends AbstractEntity {
-
-    @Column(name = "usr_first_name", nullable = false, length = 100)
-    String firstName;
-
-    @Column(name = "usr_last_name", nullable = false, length = 100)
-    String lastName;
-
     @Column(name = "usr_full_name")
     String fullName;
 
@@ -33,15 +26,16 @@ public class UserEntity extends AbstractEntity {
     @Column(name = "usr_password", nullable = false, length = 100)
     String password;
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     @Column(name = "usr_phone_number", length = 20)
     String phoneNumber;
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     @Column(name = "usr_address", length = 200)
     String address;
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     @Enumerated(EnumType.STRING)
     @Column(name = "usr_role", length = 20)
     ROLE role;
-
-
 }
