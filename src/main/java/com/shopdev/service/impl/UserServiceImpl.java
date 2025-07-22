@@ -2,6 +2,7 @@ package com.shopdev.service.impl;
 
 import com.shopdev.dto.request.UserRequest;
 import com.shopdev.dto.response.UserResponse;
+import com.shopdev.mapper.UserMapper;
 import com.shopdev.model.UserEntity;
 import com.shopdev.repository.UserRepository;
 import com.shopdev.service.UserService;
@@ -20,19 +21,31 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     UserRepository userRepository;
+    UserMapper userMapper;
 
     @Override
     public UserEntity createUser(UserRequest userRequest) {
+        boolean checkUser = userRepository.existsByEmail(userRequest.getEmail());
+        if (checkUser) {
+            throw new RuntimeException("User with email " + userRequest.getEmail() + " already exists");
+        }
+
+
+        log.info("INFO USER :{}", checkUser);
+
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
         String hashPassword = passwordEncoder.encode(userRequest.getPassword());
 
-        UserEntity userEntity = UserEntity.builder()
-                .fullName(userRequest.getFullName())
-                .password(hashPassword)
-                .email(userRequest.getEmail())
-                .build();
+//        UserEntity userEntity = UserEntity.builder()
+//                .fullName(userRequest.getFullName())
+//                .password(hashPassword)
+//                .email(userRequest.getEmail())
+//                .build();
 
-        return userRepository.save(userEntity);
+        UserEntity result = userMapper.userEntityToUserRequest(userRequest);
+        result.setPassword(hashPassword);
+
+        return userRepository.save(result);
     }
 
     @Override
@@ -46,12 +59,6 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("Wrong Password");
         }
 
-        log.info("Check Password {}", checkPassword);
-
-
-        return UserResponse.builder()
-                .usr_full_name(findUser.getFullName())
-                .usr_email(findUser.getEmail())
-                .build();
+        return userMapper.userEntityToUserResponse(findUser);
     }
 }
