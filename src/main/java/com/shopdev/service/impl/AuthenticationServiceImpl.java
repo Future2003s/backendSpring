@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.text.ParseException;
 import java.time.Instant;
@@ -69,7 +70,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
 
-        String token = generateToken(request.getEmail());
+        String token = generateToken(user);
 
         return AuthenticationResponse.builder()
                 .token(token)
@@ -77,18 +78,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .build();
     }
 
-
-    public String generateToken(String email) {
+    public String generateToken(UserEntity user) {
         JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS512);
 
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-                .subject(email)
+                .subject(user.getEmail())
                 .issuer("lalalycheee.vn")
                 .issueTime(new Date())
                 .expirationTime(new Date(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()))
-                .claim("test", "custom")
+                .claim("scope", buildScope(user))
                 .build();
-
 
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());
 
@@ -101,6 +100,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             log.error("Lỗi Tạo Token {}", e.getMessage());
             throw new RuntimeException(e);
         }
+    }
 
+
+    public String buildScope(UserEntity user) {
+        StringBuilder stringBuilder = new StringBuilder();
+
+
+        if (!CollectionUtils.isEmpty(user.getRoles())) {
+            user.getRoles().forEach(stringBuilder::append);
+        }
+
+        return stringBuilder.toString();
     }
 }
