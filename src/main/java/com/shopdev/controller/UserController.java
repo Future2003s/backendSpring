@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,19 +24,18 @@ import java.util.List;
 @RequestMapping("/api")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@EnableMethodSecurity
 public class UserController {
     UserRepository userRepository;
 
     @GetMapping("/users")
     public ResponseData<List<UserEntity>> users() {
+        /**
+         * Lấy được ROLE JWT SCOPE
+         * Authentication -> SecurityContextHolder.getContext().getAuthentication()
+         */
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        log.info("USER NAME ContextHolder: {}", authentication.getName());
-        log.info("ROLES : {}", authentication.getAuthorities());
 
-        log.info("ROLES : {}", authentication);
-
-
-        authentication.getAuthorities().forEach(authority -> log.info("ROLE : {}", authority));
 
         return new ResponseData<>(HttpStatus.OK, "Get All Users SuccessFully", userRepository.findAll());
     }

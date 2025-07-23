@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
@@ -30,36 +31,40 @@ public class SecurityConfig {
     @NonFinal
     String jwtSignKey;
 
-    String[] PUBLIC_ENDPOINT = {"/api/auth/login", "/api/auth/createUser", "/v1/api/create-category", "/v1/api/products/createProduct", "/api/auth/introspect"};
+    String[] PUBLIC_ENDPOINT =
+            {"/api/auth/login", "/api/auth/createUser"
+                    , "/v1/api/create-category"
+                    , "/v1/api/products/createProduct"
+                    , "/api/auth/introspect"
+            };
 
     String[] PRIVATE_ENDPOINT = {"/api/users"};
 
     @Bean
-
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(request -> {
             request.requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINT)
                     .permitAll()
-//                    matcher admin
-//                    .requestMatchers(HttpMethod.GET, PRIVATE_ENDPOINT).hasAnyAuthority("ROLE_ADMIN")
+                    /**
+                     * phân quyền ROLE admin theo END_POINT
+                     */
+                    .requestMatchers(HttpMethod.GET, PRIVATE_ENDPOINT)
+//                    .hasAnyAuthority("ROLE_ADMIN")
+                    .hasRole("ADMIN")
                     .anyRequest()
                     .authenticated();
         });
-
-
-//        config auth resource server
+        /**
+         * Cấu hình để nhận được token qua Auth Bearer
+         * Jwt Converter để thay đổi được Prefix từ SCOPE_ADMIN -> ROLE_ADMIN
+         */
         http.oauth2ResourceServer(oauth2 ->
                 oauth2.jwt(jwtConfigurer -> jwtConfigurer.decoder(jwtDecoder())
                         .jwtAuthenticationConverter(jwtAuthenticationConverter()))
-
-
         );
-
-        http.csrf(httpSecurityCsrfConfigurer -> httpSecurityCsrfConfigurer.disable());
-
+        http.csrf(AbstractHttpConfigurer::disable);
         return http.build();
     }
-
 
     @Bean
     JwtDecoder jwtDecoder() {
