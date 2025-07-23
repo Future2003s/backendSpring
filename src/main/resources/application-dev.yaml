@@ -25,3 +25,7 @@ logging:
     org:
       hibernate:
         sql: debug
+
+
+jwt:
+  sign_key: "rG2Wp80h/2q/ZoxaaVmk1FwQijr+RElHiheKIB5fBLjZNd+8Yhft9yjG1HxX+TPG"

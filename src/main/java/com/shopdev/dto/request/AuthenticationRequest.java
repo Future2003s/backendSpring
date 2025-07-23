@@ -11,6 +11,6 @@ import java.io.Serializable;
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AuthenticationRequest implements Serializable {
-    String username;
+    String email;
     String password;
 }

@@ -2,6 +2,9 @@ package com.shopdev.service.impl;
 
 import com.shopdev.dto.request.UserRequest;
 import com.shopdev.dto.response.UserResponse;
+import com.shopdev.enums.ErrorCode;
+import com.shopdev.enums.ROLE;
+import com.shopdev.exception.AppException;
 import com.shopdev.mapper.UserMapper;
 import com.shopdev.model.UserEntity;
 import com.shopdev.repository.UserRepository;
@@ -14,6 +17,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
+
 
 @Slf4j
 @Service
@@ -22,28 +27,20 @@ import org.springframework.stereotype.Service;
 public class UserServiceImpl implements UserService {
     UserRepository userRepository;
     UserMapper userMapper;
+    PasswordEncoder passwordEncoder;
 
     @Override
     public UserEntity createUser(UserRequest userRequest) {
-        boolean checkUser = userRepository.existsByEmail(userRequest.getEmail());
-        if (checkUser) {
-            throw new RuntimeException("User with email " + userRequest.getEmail() + " already exists");
+        if (userRepository.existsByEmail(userRequest.getEmail())) {
+            throw new AppException(ErrorCode.USER_EXISTED);
         }
 
-
-        log.info("INFO USER :{}", checkUser);
-
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
-        String hashPassword = passwordEncoder.encode(userRequest.getPassword());
-
-//        UserEntity userEntity = UserEntity.builder()
-//                .fullName(userRequest.getFullName())
-//                .password(hashPassword)
-//                .email(userRequest.getEmail())
-//                .build();
+        HashSet<String> roles = new HashSet<>();
+        roles.add(ROLE.USER.name());
 
         UserEntity result = userMapper.userEntityToUserRequest(userRequest);
-        result.setPassword(hashPassword);
+        result.setPassword(passwordEncoder.encode(userRequest.getPassword()));
+        result.setRoles(roles);
 
         return userRepository.save(result);
     }

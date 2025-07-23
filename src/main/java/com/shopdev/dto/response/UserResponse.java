@@ -5,6 +5,8 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -13,6 +15,7 @@ import java.io.Serializable;
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserResponse implements Serializable {
+    String id;
     String user_fullName;
     String user_email;
 
@@ -20,4 +23,6 @@ public class UserResponse implements Serializable {
     String phone_number;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     String user_address;
+
+    Set<String> roles = new HashSet<>();
 }
