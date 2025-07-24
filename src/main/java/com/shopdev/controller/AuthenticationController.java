@@ -9,13 +9,13 @@ import com.shopdev.dto.response.AuthenticationResponse;
 import com.shopdev.dto.response.IntrospectResponse;
 import com.shopdev.dto.response.ResponseData;
 import com.shopdev.model.UserEntity;
-import com.shopdev.repository.UserRepository;
 import com.shopdev.service.AuthenticationService;
 import com.shopdev.service.UserService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.text.ParseException;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -31,7 +32,6 @@ import java.text.ParseException;
 public class AuthenticationController {
     UserService userService;
     AuthenticationService authenticationService;
-    UserRepository userRepository;
 
     @PostMapping("/createUser")
     public ResponseData<UserEntity> createUser(@RequestBody @Valid UserRequest userRequest) {
@@ -46,8 +46,7 @@ public class AuthenticationController {
 
     @PostMapping("/introspect")
     public ResponseData<IntrospectResponse> login(@RequestBody IntrospectRequest request) throws ParseException, JOSEException {
-        IntrospectResponse result = authenticationService.introspect(request);
-        return new ResponseData<>(HttpStatus.OK, "Verify Token SuccessFully", result);
+        return new ResponseData<>(HttpStatus.OK, "Verify Token SuccessFully", authenticationService.introspect(request));
     }
 
 }
