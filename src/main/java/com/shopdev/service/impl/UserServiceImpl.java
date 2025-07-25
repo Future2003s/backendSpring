@@ -1,5 +1,10 @@
 package com.shopdev.service.impl;
 
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.JWSObject;
+import com.nimbusds.jose.Payload;
+import com.nimbusds.jwt.JWTClaimsSet;
 import com.shopdev.dto.request.UserRequest;
 import com.shopdev.dto.response.UserResponse;
 import com.shopdev.enums.ErrorCode;
@@ -17,7 +22,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
 import java.util.HashSet;
+import java.util.StringJoiner;
 
 
 @Slf4j
@@ -56,6 +65,41 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("Wrong Password");
         }
 
-        return userMapper.userEntityToUserResponse(findUser);
+        String access_token = generateToken(findUser);
+
+        return UserResponse.builder()
+                .user_fullName(findUser.getFullName())
+                .access_token(access_token)
+                .build();
     }
+
+
+    private String generateToken(UserEntity user) {
+        JWSHeader headerJwt = new JWSHeader(JWSAlgorithm.HS512);
+
+        JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
+                .issuer("lalalycheee.vn")
+                .subject(user.getFullName())
+                .issueTime(new Date())
+                .expirationTime(new Date(Instant.now().plus(7, ChronoUnit.DAYS).toEpochMilli()))
+                .claim("scope", buildingRole(user))
+                .build();
+
+
+        Payload payload = new Payload(jwtClaimsSet.toJSONObject());
+
+
+        JWSObject jwsObject = new JWSObject(headerJwt, payload);
+
+        return jwsObject.serialize();
+    }
+
+
+    private String buildingRole(UserEntity user) {
+        StringJoiner roles = new StringJoiner("");
+        user.getRoles().forEach(roles::add);
+        return roles.toString();
+    }
+
+
 }

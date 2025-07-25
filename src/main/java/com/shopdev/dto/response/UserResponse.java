@@ -17,12 +17,14 @@ import java.util.Set;
 public class UserResponse implements Serializable {
     String id;
     String user_fullName;
-    String user_email;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     String phone_number;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     String user_address;
+    String access_token;
 
+    String refresh_token;
+    
     Set<String> roles = new HashSet<>();
 }

@@ -40,8 +40,10 @@ public class AuthenticationController {
 
     @PostMapping("/login")
     public ResponseData<AuthenticationResponse> login(@RequestBody @Valid AuthenticationRequest request) {
-        AuthenticationResponse authenticationResponse = authenticationService.authenticate(request);
-        return new ResponseData<>(HttpStatus.OK, "Login SuccessFully", authenticationResponse);
+        return new ResponseData<>(
+                HttpStatus.OK
+                , "Login SuccessFully"
+                , authenticationService.login(request));
     }
 
     @PostMapping("/introspect")

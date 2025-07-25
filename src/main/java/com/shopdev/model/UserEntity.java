@@ -2,8 +2,9 @@ package com.shopdev.model;
 
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.shopdev.enums.ROLE;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -20,6 +21,12 @@ import java.util.Set;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserEntity extends AbstractEntity {
+    @Column(name = "usr_first_name")
+    String firstName;
+
+    @Column(name = "usr_last_name")
+    String lastName;
+
     @Column(name = "usr_full_name")
     String fullName;
 
@@ -31,16 +38,11 @@ public class UserEntity extends AbstractEntity {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @Column(name = "usr_phone_number", length = 20)
-    String phoneNumber;
+    String phone_number;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @Column(name = "usr_address", length = 200)
     String address;
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    @Enumerated(EnumType.STRING)
-    @Column(name = "usr_role", length = 20)
-    ROLE role;
 
     Set<String> roles = new HashSet<>();
 }

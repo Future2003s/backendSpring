@@ -37,13 +37,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     UserRepository userRepository;
     PasswordEncoder passwordEncoder;
 
-
     @NonFinal
     @Value("${jwt.sign_key}")
     public String SIGNER_KEY;
 
     @Override
-
     public IntrospectResponse introspect(IntrospectRequest request)
             throws JOSEException, ParseException {
         String token = request.getToken();
@@ -56,30 +54,36 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         boolean verified = signedJWT.verify(verifier);
 
-
         return IntrospectResponse.builder()
                 .valid(verified && expireTime.after(new Date()))
                 .build();
     }
 
     @Override
-    public AuthenticationResponse authenticate(AuthenticationRequest request) {
-        UserEntity user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new RuntimeException("User not found"));
-        boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
-        if (!authenticated) {
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
+    public AuthenticationResponse login(AuthenticationRequest request) {
+        UserEntity user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new RuntimeException("Passwords don't match");
         }
 
-        String token = generateToken(user);
+        String accessToken = generateToken(user);
+        String refreshToken = generateToken(user);
 
         return AuthenticationResponse.builder()
-                .token(token)
-                .authenticated(true)
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .fullName(user.getFullName())
+                .access_token(accessToken)
+                .refresh_token(refreshToken)
                 .build();
     }
 
+
     public String generateToken(UserEntity user) {
         JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS512);
+
 
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
                 .subject(user.getEmail())
