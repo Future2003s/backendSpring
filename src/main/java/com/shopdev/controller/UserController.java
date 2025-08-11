@@ -49,10 +49,9 @@ public class UserController {
 
     @PostAuthorize("hasRole('ADMIN')")
     @GetMapping("/info-user/{userId}")
-    public ResponseData<UserEntity> userInfo(@PathVariable(name = "userId") Long userId) {
-        String id = userId.toString();
+    public ResponseData<UserEntity> userInfo(@PathVariable(name = "userId") String userId) {
         return new ResponseData<>(HttpStatus.OK, "Get Information SuccessFully",
-                userRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED))
+                userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED))
         );
     }
 }
