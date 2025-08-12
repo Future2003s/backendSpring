@@ -8,6 +8,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.List;
 
 @Getter
 @Setter
@@ -17,4 +18,18 @@ public class ProductRequest implements Serializable {
     BigDecimal product_price;
 
     Long category_id;
+    String brand_id;
+    List<String> tag_ids;
+    List<String> image_urls;
+    List<VariantItem> variants;
+
+    @Getter
+    @Setter
+    @FieldDefaults(level = AccessLevel.PRIVATE)
+    public static class VariantItem implements Serializable {
+        String sku;
+        String name;
+        BigDecimal price;
+        Integer stockQuantity;
+    }
 }

@@ -35,7 +35,9 @@ public class AuthenticationController {
 
     @PostMapping("/createUser")
     public ResponseData<UserEntity> createUser(@RequestBody @Valid UserRequest userRequest) {
-        return new ResponseData<>(HttpStatus.CREATED, "Create User SuccessFully", userService.createUser(userRequest));
+        return new ResponseData<>(HttpStatus.CREATED,
+                "Create User SuccessFully", userService.createUser(userRequest));
+
     }
 
     @PostMapping("/login")
@@ -48,7 +50,8 @@ public class AuthenticationController {
 
     @PostMapping("/introspect")
     public ResponseData<IntrospectResponse> login(@RequestBody IntrospectRequest request) throws ParseException, JOSEException {
-        return new ResponseData<>(HttpStatus.OK, "Verify Token SuccessFully", authenticationService.introspect(request));
+        IntrospectResponse introspectResponse = authenticationService.introspect(request);
+        return new ResponseData<>(HttpStatus.OK, "Verify Token SuccessFully", introspectResponse);
     }
 
 }
