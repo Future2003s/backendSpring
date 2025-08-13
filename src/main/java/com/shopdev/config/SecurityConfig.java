@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -26,6 +27,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Configuration
+@EnableMethodSecurity
 public class SecurityConfig {
     @Value("${jwt.sign_key}")
     @NonFinal
@@ -33,17 +35,19 @@ public class SecurityConfig {
 
     String[] PUBLIC_ENDPOINT =
             {"/api/auth/login", "/api/auth/createUser"
-                    , "/v1/api/create-category"
-                    , "/v1/api/products/createProduct"
                     , "/api/auth/introspect"
             };
 
-    String[] PRIVATE_ENDPOINT = {"/api/users"};
+    String[] PRIVATE_ENDPOINT = {"/api/users", "/v1/api/categories", "/v1/api/brands", "/v1/api/tags"};
+
+    String[] PUBLIC_GET_ENDPOINT = {"/v1/api/products/public", "/v1/api/products/public/**"};
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(request -> {
             request.requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINT)
+                    .permitAll()
+                    .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINT)
                     .permitAll()
                     /**
                      * phân quyền ROLE admin theo END_POINT
@@ -64,7 +68,7 @@ public class SecurityConfig {
          * trong oauth2
          */
         http
-                .cors(cors -> corsConfigurationSource())
+                .cors(configurer -> corsConfigurationSource())
                 .oauth2ResourceServer(oauth2 ->
                         oauth2.jwt(jwtConfigurer -> jwtConfigurer.decoder(jwtDecoder())
                                 .jwtAuthenticationConverter(jwtAuthenticationConverter()))
@@ -114,6 +118,7 @@ public class SecurityConfig {
     JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
         jwtGrantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
+        jwtGrantedAuthoritiesConverter.setAuthoritiesClaimName("scope");
 
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);

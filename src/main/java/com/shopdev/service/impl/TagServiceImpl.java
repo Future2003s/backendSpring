@@ -23,6 +23,11 @@ public class TagServiceImpl implements TagService {
                 .build();
         return tagRepository.save(tag);
     }
+
+    @Override
+    public java.util.List<TagEntity> findAll() {
+        return tagRepository.findAll();
+    }
 }
 
 

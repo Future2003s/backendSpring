@@ -108,13 +108,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 
     public String buildScope(UserEntity user) {
-        StringBuilder stringBuilder = new StringBuilder();
-
-
-        if (!CollectionUtils.isEmpty(user.getRoles())) {
-            user.getRoles().forEach(stringBuilder::append);
+        if (CollectionUtils.isEmpty(user.getRoles())) {
+            return "";
         }
-
-        return stringBuilder.toString();
+        // Space-delimited roles so Spring maps them to authorities correctly
+        return String.join(" ", user.getRoles());
     }
 }

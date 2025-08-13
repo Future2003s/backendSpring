@@ -6,6 +6,7 @@ import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.Payload;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.shopdev.dto.request.UserRequest;
+import com.shopdev.dto.request.UpdateMeRequest;
 import com.shopdev.dto.response.UserResponse;
 import com.shopdev.enums.ErrorCode;
 import com.shopdev.enums.ROLE;
@@ -71,6 +72,20 @@ public class UserServiceImpl implements UserService {
                 .user_fullName(findUser.getFullName())
                 .access_token(access_token)
                 .build();
+    }
+
+    @Override
+    public UserEntity updateMe(String email, UpdateMeRequest request) {
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
+        if (request.getLastName() != null) user.setLastName(request.getLastName());
+        if (request.getFullName() != null) user.setFullName(request.getFullName());
+        if (request.getPhone_number() != null) user.setPhone_number(request.getPhone_number());
+        if (request.getAddress() != null) user.setAddress(request.getAddress());
+
+        return userRepository.save(user);
     }
 
 

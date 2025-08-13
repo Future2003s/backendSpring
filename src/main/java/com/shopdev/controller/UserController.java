@@ -13,13 +13,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -29,9 +25,9 @@ import java.util.List;
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@EnableMethodSecurity
 public class UserController {
     UserRepository userRepository;
+    com.shopdev.service.UserService userService;
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/users")
@@ -41,8 +37,6 @@ public class UserController {
          * Authentication -> SecurityContextHolder.getContext().getAuthentication()
          */
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-
         return new ResponseData<>(HttpStatus.OK, "Get All Users SuccessFully", userRepository.findAll());
     }
 
@@ -53,5 +47,20 @@ public class UserController {
         return new ResponseData<>(HttpStatus.OK, "Get Information SuccessFully",
                 userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED))
         );
+    }
+
+    @GetMapping("/me")
+    public ResponseData<UserEntity> me() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        return new ResponseData<>(HttpStatus.OK, "Get Me Successfully", user);
+    }
+
+    @PutMapping("/me")
+    public ResponseData<UserEntity> updateMe(@RequestBody com.shopdev.dto.request.UpdateMeRequest request) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        UserEntity updated = userService.updateMe(email, request);
+        return new ResponseData<>(HttpStatus.OK, "Update Me Successfully", updated);
     }
 }

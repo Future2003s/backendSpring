@@ -2,6 +2,8 @@ package com.shopdev.service.impl;
 
 import com.shopdev.dto.request.ProductRequest;
 import com.shopdev.dto.response.ProductResponse;
+import com.shopdev.dto.response.ProductListItemResponse;
+import com.shopdev.dto.response.ProductDetailResponse;
 import com.shopdev.model.*;
 import com.shopdev.repository.*;
 import com.shopdev.service.ProductService;
@@ -88,5 +90,49 @@ public class ProductServiceImpl implements ProductService {
                 .category_id(categoryEntity.getId())
                 .build();
 
+    }
+
+    @Override
+    public java.util.List<ProductListItemResponse> listProducts(String keyword, Long categoryId, String brandId, int page, int size) {
+        java.util.List<ProductEntity> all = productRepository.findAll();
+        java.util.List<ProductListItemResponse> result = new java.util.ArrayList<>();
+        for (ProductEntity p : all) {
+            if (keyword != null && !keyword.isBlank()) {
+                if (p.getProduct_name() == null || !p.getProduct_name().toLowerCase().contains(keyword.toLowerCase())) continue;
+            }
+            if (categoryId != null && (p.getCategory() == null || !categoryId.equals(p.getCategory().getId()))) continue;
+            if (brandId != null && (p.getBrand() == null || !brandId.equals(p.getBrand().getId()))) continue;
+
+            result.add(ProductListItemResponse.builder()
+                    .id(p.getId())
+                    .name(p.getProduct_name())
+                    .price(p.getPrice())
+                    .brandName(p.getBrand() != null ? p.getBrand().getName() : null)
+                    .categoryName(p.getCategory() != null ? p.getCategory().getCategoryName() : null)
+                    .imageUrls(p.getImages() != null ? p.getImages().stream().map(ProductImage::getImageUrl).toList() : java.util.List.of())
+                    .build());
+        }
+        return result;
+    }
+
+    @Override
+    public ProductDetailResponse getProduct(String productId) {
+        ProductEntity p = productRepository.findById(productId).orElseThrow(() -> new RuntimeException("Product Not Found"));
+        return ProductDetailResponse.builder()
+                .id(p.getId())
+                .name(p.getProduct_name())
+                .price(p.getPrice())
+                .brandName(p.getBrand() != null ? p.getBrand().getName() : null)
+                .categoryName(p.getCategory() != null ? p.getCategory().getCategoryName() : null)
+                .imageUrls(p.getImages() != null ? p.getImages().stream().map(ProductImage::getImageUrl).toList() : java.util.List.of())
+                .variants(p.getVariants() != null ? p.getVariants().stream().map(v -> ProductDetailResponse.Variant.builder()
+                        .id(v.getId())
+                        .sku(v.getSku())
+                        .name(v.getName())
+                        .price(v.getPrice())
+                        .stockQuantity(v.getStockQuantity())
+                        .build()).toList() : java.util.List.of())
+                .tags(p.getTags() != null ? p.getTags().stream().map(TagEntity::getName).toList() : java.util.List.of())
+                .build();
     }
 }

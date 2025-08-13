@@ -5,6 +5,8 @@ import com.shopdev.model.TagEntity;
 
 public interface TagService {
     TagEntity create(TagRequest request);
+
+    java.util.List<TagEntity> findAll();
 }
 
 
