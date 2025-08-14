@@ -4,6 +4,7 @@ import com.shopdev.dto.request.ProductRequest;
 import com.shopdev.dto.response.ProductResponse;
 import com.shopdev.dto.response.ProductListItemResponse;
 import com.shopdev.dto.response.ProductDetailResponse;
+import com.shopdev.dto.request.ProductUpdateRequest;
 import com.shopdev.model.*;
 import com.shopdev.repository.*;
 import com.shopdev.service.ProductService;
@@ -134,5 +135,71 @@ public class ProductServiceImpl implements ProductService {
                         .build()).toList() : java.util.List.of())
                 .tags(p.getTags() != null ? p.getTags().stream().map(TagEntity::getName).toList() : java.util.List.of())
                 .build();
+    }
+
+    @Override
+    public ProductResponse updateProduct(String id, ProductUpdateRequest request) {
+        ProductEntity product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product Not Found"));
+
+        if (request.getProduct_name() != null) {
+            product.setProduct_name(request.getProduct_name());
+        }
+        if (request.getProduct_price() != null) {
+            product.setPrice(request.getProduct_price());
+        }
+        if (request.getCategory_id() != null) {
+            CategoryEntity category = categoryRepository.findById(request.getCategory_id())
+                    .orElseThrow(() -> new RuntimeException("Category Not Found"));
+            product.setCategory(category);
+        }
+        if (request.getBrand_id() != null) {
+            BrandEntity brand = null;
+            if (!request.getBrand_id().isBlank()) {
+                brand = brandRepository.findById(request.getBrand_id())
+                        .orElseThrow(() -> new RuntimeException("Brand Not Found"));
+            }
+            product.setBrand(brand);
+        }
+        if (request.getTag_ids() != null) {
+            if (request.getTag_ids().isEmpty()) {
+                product.setTags(new java.util.HashSet<>());
+            } else {
+                product.setTags(new java.util.HashSet<>(tagRepository.findAllById(request.getTag_ids())));
+            }
+        }
+        if (request.getImage_urls() != null) {
+            // Replace all images by mutating the managed collection to avoid orphanRemoval issues
+            if (product.getImages() == null) {
+                product.setImages(new java.util.ArrayList<>());
+            } else {
+                product.getImages().clear();
+            }
+            for (int i = 0; i < request.getImage_urls().size(); i++) {
+                String url = request.getImage_urls().get(i);
+                ProductImage image = ProductImage.builder()
+                        .imageUrl(url)
+                        .product(product)
+                        .primary(i == 0)
+                        .build();
+                product.getImages().add(image);
+            }
+        }
+
+        ProductEntity saved = productRepository.save(product);
+
+        return ProductResponse.builder()
+                .product_name(saved.getProduct_name())
+                .product_price(saved.getPrice())
+                .category_id(saved.getCategory() != null ? saved.getCategory().getId() : null)
+                .build();
+    }
+
+    @Override
+    public void deleteProduct(String id) {
+        if (!productRepository.existsById(id)) {
+            throw new RuntimeException("Product Not Found");
+        }
+        productRepository.deleteById(id);
     }
 }

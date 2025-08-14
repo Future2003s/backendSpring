@@ -2,15 +2,20 @@ package com.shopdev.controller;
 
 
 import com.shopdev.dto.request.ProductRequest;
+import com.shopdev.dto.response.ProductListItemResponse;
 import com.shopdev.dto.response.ProductResponse;
 import com.shopdev.dto.response.ResponseData;
 import com.shopdev.service.ProductService;
+import com.shopdev.dto.request.ProductUpdateRequest;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -29,8 +34,9 @@ public class ProductController {
         return new ResponseData<>(HttpStatus.OK, "Use /public for customer listing", null);
     }
 
+
     @GetMapping("/public")
-    public ResponseData<java.util.List<com.shopdev.dto.response.ProductListItemResponse>> listProducts(
+    public ResponseData<List<ProductListItemResponse>> listProducts(
             @RequestParam(value = "q", required = false) String keyword,
             @RequestParam(value = "categoryId", required = false) Long categoryId,
             @RequestParam(value = "brandId", required = false) String brandId,
@@ -43,5 +49,19 @@ public class ProductController {
     @GetMapping("/public/{id}")
     public ResponseData<com.shopdev.dto.response.ProductDetailResponse> getProduct(@PathVariable("id") String id) {
         return new ResponseData<>(HttpStatus.OK, "OK", productService.getProduct(id));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}")
+    public ResponseData<ProductResponse> updateProduct(@PathVariable("id") String id,
+                                                       @Valid @RequestBody ProductUpdateRequest request) {
+        return new ResponseData<>(HttpStatus.OK, "Updated", productService.updateProduct(id, request));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{id}")
+    public ResponseData<Void> deleteProduct(@PathVariable("id") String id) {
+        productService.deleteProduct(id);
+        return new ResponseData<>(HttpStatus.NO_CONTENT, "Deleted", null);
     }
 }

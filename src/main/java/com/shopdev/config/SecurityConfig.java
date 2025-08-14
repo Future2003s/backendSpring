@@ -45,8 +45,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(request -> {
-            request.requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINT)
+            request
+                    .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINT)
                     .permitAll()
+                    .requestMatchers(HttpMethod.POST, "/v1/api/orders")
+                    .authenticated()
                     .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINT)
                     .permitAll()
                     /**
@@ -147,7 +150,6 @@ public class SecurityConfig {
 
         return new CorsFilter(source);
     }
-
 
     @Bean
     public PasswordEncoder passwordEncoder() {
