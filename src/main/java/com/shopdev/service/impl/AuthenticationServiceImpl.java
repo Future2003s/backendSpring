@@ -68,8 +68,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new RuntimeException("Passwords don't match");
         }
 
-        String accessToken = generateToken(user);
-        String refreshToken = generateToken(user);
+        String accessToken = generateToken(user, 1); // 1 hour
+        String refreshToken = generateToken(user, 24 * 30); // 30 days
 
         return AuthenticationResponse.builder()
                 .firstName(user.getFirstName())
@@ -77,11 +77,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .fullName(user.getFullName())
                 .access_token(accessToken)
                 .refresh_token(refreshToken)
+                .expires_in(3600)
                 .build();
     }
 
 
-    public String generateToken(UserEntity user) {
+    public String generateToken(UserEntity user, int hoursValid) {
         JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS512);
 
 
@@ -89,7 +90,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .subject(user.getEmail())
                 .issuer("lalalycheee.vn")
                 .issueTime(new Date())
-                .expirationTime(new Date(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()))
+                .expirationTime(new Date(Instant.now().plus(hoursValid, ChronoUnit.HOURS).toEpochMilli()))
                 .claim("scope", buildScope(user))
                 .build();
 

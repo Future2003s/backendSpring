@@ -23,6 +23,9 @@ public class ProductRequest implements Serializable {
     List<String> image_urls;
     List<VariantItem> variants;
 
+    Integer stockQuantity;
+    String status; // IN_STOCK, OUT_OF_STOCK, LOW_STOCK
+
     @Getter
     @Setter
     @FieldDefaults(level = AccessLevel.PRIVATE)

@@ -4,6 +4,7 @@ package com.shopdev.model;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import com.shopdev.enums.ProductStatus;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -45,4 +46,11 @@ public class ProductEntity extends AbstractEntity {
             inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
     Set<TagEntity> tags;
+
+    @Column(name = "stock_quantity")
+    Integer stockQuantity;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 32)
+    ProductStatus status;
 }

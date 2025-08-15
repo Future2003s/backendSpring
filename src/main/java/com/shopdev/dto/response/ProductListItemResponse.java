@@ -19,6 +19,8 @@ public class ProductListItemResponse {
     String brandName;
     String categoryName;
     List<String> imageUrls;
+    Integer stockQuantity;
+    String status;
 }
 
 

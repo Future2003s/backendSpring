@@ -18,4 +18,5 @@ public class AuthenticationResponse implements Serializable {
     String fullName;
     String access_token;
     String refresh_token;
+    long expires_in; // seconds until access token expiration
 }

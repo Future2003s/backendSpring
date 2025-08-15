@@ -6,6 +6,7 @@ import com.shopdev.dto.response.ProductListItemResponse;
 import com.shopdev.dto.response.ProductDetailResponse;
 import com.shopdev.dto.request.ProductUpdateRequest;
 import com.shopdev.model.*;
+import com.shopdev.enums.ProductStatus;
 import com.shopdev.repository.*;
 import com.shopdev.service.ProductService;
 import lombok.AccessLevel;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -38,6 +40,8 @@ public class ProductServiceImpl implements ProductService {
                 .price(request.getProduct_price())
                 .category(categoryEntity)
                 .brand(brand)
+                .stockQuantity(request.getStockQuantity())
+                .status(parseStatus(request.getStatus()))
                 .build();
 
         // Persist product first to obtain managed entity
@@ -95,45 +99,73 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public java.util.List<ProductListItemResponse> listProducts(String keyword, Long categoryId, String brandId, int page, int size) {
-        java.util.List<ProductEntity> all = productRepository.findAll();
-        java.util.List<ProductListItemResponse> result = new java.util.ArrayList<>();
-        for (ProductEntity p : all) {
-            if (keyword != null && !keyword.isBlank()) {
-                if (p.getProduct_name() == null || !p.getProduct_name().toLowerCase().contains(keyword.toLowerCase())) continue;
-            }
-            if (categoryId != null && (p.getCategory() == null || !categoryId.equals(p.getCategory().getId()))) continue;
-            if (brandId != null && (p.getBrand() == null || !brandId.equals(p.getBrand().getId()))) continue;
-
-            result.add(ProductListItemResponse.builder()
-                    .id(p.getId())
-                    .name(p.getProduct_name())
-                    .price(p.getPrice())
-                    .brandName(p.getBrand() != null ? p.getBrand().getName() : null)
-                    .categoryName(p.getCategory() != null ? p.getCategory().getCategoryName() : null)
-                    .imageUrls(p.getImages() != null ? p.getImages().stream().map(ProductImage::getImageUrl).toList() : java.util.List.of())
-                    .build());
-        }
-        return result;
+        var pageable = org.springframework.data.domain.PageRequest.of(Math.max(page, 0), Math.max(size, 1));
+        var pageData = productRepository.searchList(
+                (keyword == null || keyword.isBlank()) ? null : keyword,
+                categoryId,
+                (brandId == null || brandId.isBlank()) ? null : brandId,
+                pageable
+        );
+        
+        return pageData.getContent().stream().map(p -> ProductListItemResponse.builder()
+                .id(p.getId())
+                .name(p.getProduct_name())
+                .price(p.getPrice())
+                .brandName(p.getBrand() != null ? p.getBrand().getName() : null)
+                .categoryName(p.getCategory() != null ? p.getCategory().getCategoryName() : null)
+                .imageUrls(p.getImages() != null ? p.getImages().stream()
+                        .map(img -> img.getImageUrl())
+                        .collect(java.util.stream.Collectors.toList()) : java.util.List.of())
+                .stockQuantity(p.getStockQuantity())
+                .status(p.getStatus() != null ? p.getStatus().name() : null)
+                .build()).collect(java.util.stream.Collectors.toList());
     }
 
     @Override
     public ProductDetailResponse getProduct(String productId) {
-        ProductEntity p = productRepository.findById(productId).orElseThrow(() -> new RuntimeException("Product Not Found"));
+        ProductEntity p = productRepository.findWithAllById(productId).orElseThrow(() -> new RuntimeException("Product Not Found"));
+        
+        // Fetch images separately to avoid MultipleBagFetchException
+        List<String> imageUrls = java.util.List.of();
+        try {
+            var productImages = productRepository.findImagesByProductId(productId);
+            if (productImages != null && !productImages.isEmpty()) {
+                imageUrls = productImages.stream().map(ProductImage::getImageUrl).toList();
+            }
+        } catch (Exception e) {
+            System.out.println("Error fetching images for product " + productId + ": " + e.getMessage());
+            imageUrls = java.util.List.of();
+        }
+        
+        // Fetch variants and tags separately to avoid MultipleBagFetchException
+        List<ProductDetailResponse.Variant> variants = java.util.List.of();
+        List<String> tags = java.util.List.of();
+        
+        if (p.getVariants() != null && !p.getVariants().isEmpty()) {
+            variants = p.getVariants().stream().map(v -> ProductDetailResponse.Variant.builder()
+                    .id(v.getId())
+                    .sku(v.getSku())
+                    .name(v.getName())
+                    .price(v.getPrice())
+                    .stockQuantity(v.getStockQuantity())
+                    .build()).toList();
+        }
+        
+        if (p.getTags() != null && !p.getTags().isEmpty()) {
+            tags = p.getTags().stream().map(TagEntity::getName).toList();
+        }
+        
         return ProductDetailResponse.builder()
                 .id(p.getId())
                 .name(p.getProduct_name())
                 .price(p.getPrice())
                 .brandName(p.getBrand() != null ? p.getBrand().getName() : null)
                 .categoryName(p.getCategory() != null ? p.getCategory().getCategoryName() : null)
-                .imageUrls(p.getImages() != null ? p.getImages().stream().map(ProductImage::getImageUrl).toList() : java.util.List.of())
-                .variants(p.getVariants() != null ? p.getVariants().stream().map(v -> ProductDetailResponse.Variant.builder()
-                        .id(v.getId())
-                        .sku(v.getSku())
-                        .name(v.getName())
-                        .price(v.getPrice())
-                        .stockQuantity(v.getStockQuantity())
-                        .build()).toList() : java.util.List.of())
-                .tags(p.getTags() != null ? p.getTags().stream().map(TagEntity::getName).toList() : java.util.List.of())
+                .imageUrls(imageUrls)
+                .variants(variants)
+                .tags(tags)
+                .stockQuantity(p.getStockQuantity())
+                .status(p.getStatus() != null ? p.getStatus().name() : null)
                 .build();
     }
 
@@ -186,6 +218,14 @@ public class ProductServiceImpl implements ProductService {
             }
         }
 
+        if (request.getStockQuantity() != null) {
+            product.setStockQuantity(request.getStockQuantity());
+        }
+        
+        if (request.getStatus() != null) {
+            product.setStatus(parseStatus(request.getStatus()));
+        }
+
         ProductEntity saved = productRepository.save(product);
 
         return ProductResponse.builder()
@@ -201,5 +241,14 @@ public class ProductServiceImpl implements ProductService {
             throw new RuntimeException("Product Not Found");
         }
         productRepository.deleteById(id);
+    }
+
+    private ProductStatus parseStatus(String input) {
+        if (input == null) return null;
+        try {
+            return ProductStatus.valueOf(input.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 }

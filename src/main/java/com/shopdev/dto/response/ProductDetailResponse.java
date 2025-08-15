@@ -20,6 +20,8 @@ public class ProductDetailResponse {
     List<String> imageUrls;
     List<Variant> variants;
     List<String> tags;
+    Integer stockQuantity;
+    String status;
 
     @Data
     @NoArgsConstructor

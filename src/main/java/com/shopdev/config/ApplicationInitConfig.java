@@ -11,6 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.event.EventListener;
+import com.shopdev.events.OrderCreatedEvent;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.HashSet;
@@ -38,5 +40,11 @@ public class ApplicationInitConfig {
                 log.info("ADMIN ROLE WAS REGISTERED WITH: {} {}", "admin@gmail.com", "admin@123");
             }
         };
+    }
+
+    // Simple log listener for order notifications (placeholder for real-time push)
+    @EventListener
+    public void onOrderCreated(OrderCreatedEvent event) {
+        log.info("New order created: {} by {}", event.orderId(), event.customerName());
     }
 }

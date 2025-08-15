@@ -20,6 +20,9 @@ public class ProductUpdateRequest implements Serializable {
     String brand_id;
     List<String> tag_ids;
     List<String> image_urls;
+
+    Integer stockQuantity;
+    String status; // IN_STOCK, OUT_OF_STOCK, LOW_STOCK
 }
 
 

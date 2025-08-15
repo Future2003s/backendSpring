@@ -10,6 +10,8 @@ import com.shopdev.model.OrderHistory;
 import com.shopdev.repository.OrderRepository;
 import com.shopdev.repository.OrderHistoryRepository;
 import com.shopdev.service.OrderService;
+import org.springframework.context.ApplicationEventPublisher;
+import com.shopdev.events.OrderCreatedEvent;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -28,6 +30,7 @@ import java.util.List;
 public class OrderServiceImpl implements OrderService {
     OrderRepository orderRepository;
     OrderHistoryRepository orderHistoryRepository;
+    ApplicationEventPublisher eventPublisher;
 
     @Override
     public OrderResponse create(OrderCreateRequest request) {
@@ -56,6 +59,11 @@ public class OrderServiceImpl implements OrderService {
         order.setItems(items);
 
         OrderEntity saved = orderRepository.save(order);
+
+        // Publish domain event for notifications
+        try {
+            eventPublisher.publishEvent(new OrderCreatedEvent(saved.getId(), saved.getCustomerFullName(), saved.getAmount()));
+        } catch (Exception ignored) {}
 
         return OrderResponse.builder()
                 .id(saved.getId())
@@ -162,5 +170,7 @@ public class OrderServiceImpl implements OrderService {
                 .toList();
     }
 }
+
+
 
 
