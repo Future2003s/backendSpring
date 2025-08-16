@@ -22,6 +22,7 @@ public class OrderController {
     OrderService orderService;
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseData<OrderResponse> create(@RequestBody OrderCreateRequest request) {
         return new ResponseData<>(HttpStatus.CREATED, "Created", orderService.create(request));
     }

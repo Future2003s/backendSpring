@@ -25,6 +25,7 @@ public class ProductController {
     ProductService productService;
 
     @PostMapping("/createProduct")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseData<ProductResponse> createProduct(@Valid @RequestBody ProductRequest request) {
         return new ResponseData<>(HttpStatus.CREATED, "Create Produduct SuccessFully", productService.createProduct(request));
     }
@@ -49,6 +50,19 @@ public class ProductController {
     @GetMapping("/public/{id}")
     public ResponseData<com.shopdev.dto.response.ProductDetailResponse> getProduct(@PathVariable("id") String id) {
         return new ResponseData<>(HttpStatus.OK, "OK", productService.getProduct(id));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin")
+    public ResponseData<List<ProductListItemResponse>> listProductsForAdmin(
+            @RequestParam(value = "q", required = false) String keyword,
+            @RequestParam(value = "categoryId", required = false) Long categoryId,
+            @RequestParam(value = "brandId", required = false) String brandId,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size
+    ) {
+        return new ResponseData<>(HttpStatus.OK, "OK", productService.listProductsForAdmin(keyword, categoryId, brandId, status, page, size));
     }
 
     @PreAuthorize("hasRole('ADMIN')")

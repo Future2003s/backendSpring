@@ -24,6 +24,20 @@ public interface ProductRepository extends JpaRepository<ProductEntity, String> 
             Pageable pageable
     );
 
+    @EntityGraph(attributePaths = {"brand", "category", "images"})
+    @Query("select p from ProductEntity p " +
+            "where (:keyword is null or lower(p.product_name) like lower(concat('%', :keyword, '%'))) " +
+            "and (:categoryId is null or p.category.id = :categoryId) " +
+            "and (:brandId is null or p.brand.id = :brandId) " +
+            "and (:status is null or p.status = :status)")
+    Page<ProductEntity> searchListForAdmin(
+            @Param("keyword") String keyword,
+            @Param("categoryId") Long categoryId,
+            @Param("brandId") String brandId,
+            @Param("status") String status,
+            Pageable pageable
+    );
+
     @Query("SELECT p FROM ProductEntity p " +
            "LEFT JOIN FETCH p.brand " +
            "LEFT JOIN FETCH p.category " +

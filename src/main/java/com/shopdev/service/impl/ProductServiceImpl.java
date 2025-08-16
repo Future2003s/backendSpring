@@ -116,8 +116,41 @@ public class ProductServiceImpl implements ProductService {
                 .imageUrls(p.getImages() != null ? p.getImages().stream()
                         .map(img -> img.getImageUrl())
                         .collect(java.util.stream.Collectors.toList()) : java.util.List.of())
-                .stockQuantity(p.getStockQuantity())
-                .status(p.getStatus() != null ? p.getStatus().name() : null)
+                .stockQuantity(p.getStockQuantity() != null ? p.getStockQuantity() : 0)
+                .status(p.getStatus() != null ? p.getStatus().name() : "ACTIVE")
+                .brandId(p.getBrand() != null ? p.getBrand().getId() : null)
+                .categoryId(p.getCategory() != null ? p.getCategory().getId() : null)
+                .sku(p.getVariants() != null && !p.getVariants().isEmpty() ? p.getVariants().get(0).getSku() : null)
+                .description(null) // ProductEntity không có trường description
+                .build()).collect(java.util.stream.Collectors.toList());
+    }
+
+    @Override
+    public java.util.List<ProductListItemResponse> listProductsForAdmin(String keyword, Long categoryId, String brandId, String status, int page, int size) {
+        var pageable = org.springframework.data.domain.PageRequest.of(Math.max(page, 0), Math.max(size, 1));
+        var pageData = productRepository.searchListForAdmin(
+                (keyword == null || keyword.isBlank()) ? null : keyword,
+                categoryId,
+                (brandId == null || brandId.isBlank()) ? null : brandId,
+                (status == null || status.isBlank()) ? null : status,
+                pageable
+        );
+        
+        return pageData.getContent().stream().map(p -> ProductListItemResponse.builder()
+                .id(p.getId())
+                .name(p.getProduct_name())
+                .price(p.getPrice())
+                .brandName(p.getBrand() != null ? p.getBrand().getName() : null)
+                .categoryName(p.getCategory() != null ? p.getCategory().getCategoryName() : null)
+                .imageUrls(p.getImages() != null ? p.getImages().stream()
+                        .map(img -> img.getImageUrl())
+                        .collect(java.util.stream.Collectors.toList()) : java.util.List.of())
+                .stockQuantity(p.getStockQuantity() != null ? p.getStockQuantity() : 0)
+                .status(p.getStatus() != null ? p.getStatus().name() : "ACTIVE")
+                .brandId(p.getBrand() != null ? p.getBrand().getId() : null)
+                .categoryId(p.getCategory() != null ? p.getCategory().getId() : null)
+                .sku(p.getVariants() != null && !p.getVariants().isEmpty() ? p.getVariants().get(0).getSku() : null)
+                .description(null) // ProductEntity không có trường description
                 .build()).collect(java.util.stream.Collectors.toList());
     }
 
@@ -171,21 +204,48 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductResponse updateProduct(String id, ProductUpdateRequest request) {
+        log.info("Updating product with ID: {}", id);
+        log.info("Update request: {}", request);
+        
         ProductEntity product = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product Not Found"));
+                .orElseThrow(() -> {
+                    log.error("Product not found with ID: {}", id);
+                    return new RuntimeException("Product Not Found");
+                });
+        
+        log.info("Found product: {}", product.getProduct_name());
 
-        if (request.getProduct_name() != null) {
+        // Xử lý format mới từ frontend
+        if (request.getName() != null) {
+            product.setProduct_name(request.getName());
+        } else if (request.getProduct_name() != null) {
             product.setProduct_name(request.getProduct_name());
         }
-        if (request.getProduct_price() != null) {
+        
+        if (request.getPrice() != null) {
+            product.setPrice(request.getPrice());
+        } else if (request.getProduct_price() != null) {
             product.setPrice(request.getProduct_price());
         }
-        if (request.getCategory_id() != null) {
+        
+        if (request.getCategoryId() != null) {
+            CategoryEntity category = categoryRepository.findById(request.getCategoryId())
+                    .orElseThrow(() -> new RuntimeException("Category Not Found"));
+            product.setCategory(category);
+        } else if (request.getCategory_id() != null) {
             CategoryEntity category = categoryRepository.findById(request.getCategory_id())
                     .orElseThrow(() -> new RuntimeException("Category Not Found"));
             product.setCategory(category);
         }
-        if (request.getBrand_id() != null) {
+        
+        if (request.getBrandId() != null) {
+            BrandEntity brand = null;
+            if (!request.getBrandId().isBlank()) {
+                brand = brandRepository.findById(request.getBrandId())
+                        .orElseThrow(() -> new RuntimeException("Brand Not Found"));
+            }
+            product.setBrand(brand);
+        } else if (request.getBrand_id() != null) {
             BrandEntity brand = null;
             if (!request.getBrand_id().isBlank()) {
                 brand = brandRepository.findById(request.getBrand_id())
@@ -193,6 +253,7 @@ public class ProductServiceImpl implements ProductService {
             }
             product.setBrand(brand);
         }
+        
         if (request.getTag_ids() != null) {
             if (request.getTag_ids().isEmpty()) {
                 product.setTags(new java.util.HashSet<>());
@@ -200,8 +261,26 @@ public class ProductServiceImpl implements ProductService {
                 product.setTags(new java.util.HashSet<>(tagRepository.findAllById(request.getTag_ids())));
             }
         }
-        if (request.getImage_urls() != null) {
+        
+        // Xử lý images từ format mới
+        if (request.getImages() != null) {
             // Replace all images by mutating the managed collection to avoid orphanRemoval issues
+            if (product.getImages() == null) {
+                product.setImages(new java.util.ArrayList<>());
+            } else {
+                product.getImages().clear();
+            }
+            for (int i = 0; i < request.getImages().size(); i++) {
+                String url = request.getImages().get(i);
+                ProductImage image = ProductImage.builder()
+                        .imageUrl(url)
+                        .product(product)
+                        .primary(i == 0)
+                        .build();
+                product.getImages().add(image);
+            }
+        } else if (request.getImage_urls() != null) {
+            // Xử lý format cũ
             if (product.getImages() == null) {
                 product.setImages(new java.util.ArrayList<>());
             } else {
@@ -218,7 +297,10 @@ public class ProductServiceImpl implements ProductService {
             }
         }
 
-        if (request.getStockQuantity() != null) {
+        // Xử lý stock từ format mới
+        if (request.getStock() != null) {
+            product.setStockQuantity(request.getStock());
+        } else if (request.getStockQuantity() != null) {
             product.setStockQuantity(request.getStockQuantity());
         }
         
@@ -226,7 +308,9 @@ public class ProductServiceImpl implements ProductService {
             product.setStatus(parseStatus(request.getStatus()));
         }
 
+        log.info("Saving updated product...");
         ProductEntity saved = productRepository.save(product);
+        log.info("Product updated successfully: {}", saved.getProduct_name());
 
         return ProductResponse.builder()
                 .product_name(saved.getProduct_name())

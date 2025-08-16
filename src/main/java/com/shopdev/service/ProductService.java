@@ -11,6 +11,8 @@ public interface ProductService {
 
     java.util.List<ProductListItemResponse> listProducts(String keyword, Long categoryId, String brandId, int page, int size);
 
+    java.util.List<ProductListItemResponse> listProductsForAdmin(String keyword, Long categoryId, String brandId, String status, int page, int size);
+
     ProductDetailResponse getProduct(String productId);
 
     ProductResponse updateProduct(String id, ProductUpdateRequest request);

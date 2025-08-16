@@ -39,4 +39,13 @@ public class CategoryController {
             return new ResponseData<>(HttpStatus.OK, "OK", Collections.emptyList());
         }
     }
+
+    @GetMapping("/categories/public")
+    public ResponseData<List<CategoryResponse>> listCategoriesPublic() {
+        try {
+            return new ResponseData<>(HttpStatus.OK, "OK", categoryService.findAll());
+        } catch (Exception e) {
+            return new ResponseData<>(HttpStatus.OK, "OK", Collections.emptyList());
+        }
+    }
 }

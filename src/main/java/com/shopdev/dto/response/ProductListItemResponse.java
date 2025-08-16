@@ -21,6 +21,12 @@ public class ProductListItemResponse {
     List<String> imageUrls;
     Integer stockQuantity;
     String status;
+    
+    // Additional fields for admin
+    String sku;
+    String description;
+    String brandId;
+    Long categoryId;
 }
 
 

@@ -28,7 +28,17 @@ public class BrandController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseData<List<BrandResponse>> list() {
+        try {
+            return new ResponseData<>(HttpStatus.OK, "OK", brandService.findAll());
+        } catch (Exception e) {
+            return new ResponseData<>(HttpStatus.OK, "OK", Collections.emptyList());
+        }
+    }
+
+    @GetMapping("/public")
+    public ResponseData<List<BrandResponse>> listPublic() {
         try {
             return new ResponseData<>(HttpStatus.OK, "OK", brandService.findAll());
         } catch (Exception e) {
